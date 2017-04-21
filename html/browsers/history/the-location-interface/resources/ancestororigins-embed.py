@@ -12,11 +12,7 @@ def main(request, response):
 
     if "id" in request.GET:
         body = body + """<script>
-const ao = self.location.ancestorOrigins
-let output = []
-for(let i = 0; i < ao.length; i++) {
-  output.push(ao[i])
-}
+let output = [...self.location.ancestorOrigins]
 top.postMessage({ id: %s, output }, "*")
 </script>
 """ % request.GET.first("id")

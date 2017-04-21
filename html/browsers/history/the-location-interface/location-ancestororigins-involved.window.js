@@ -1,9 +1,5 @@
-<!doctype html>
-<script src=/resources/testharness.js></script>
-<script src=/resources/testharnessreport.js></script>
-<script src=/common/get-host-info.sub.js></script>
-<div id=log></div>
-<script>
+// META: script=/common/get-host-info.sub.js
+
 const embedPath = new URL("resources/ancestororigins-embed.py", location.href).pathname,
       info = get_host_info(),
       localOrigin = info.HTTP_ORIGIN,
@@ -25,12 +21,16 @@ async_test(t => {
 
   self.addEventListener("message", t.step_func(e => {
     if(e.data.id === localId) {
-      assert_array_equals(e.data.output, ["null", self.location.origin])
+      assert_array_equals(e.data.output, ["null", localOrigin])
       t.done()
     }
   }))
 }, "Ensure sandboxed iframes show up as null")
 
+// The following code ends up generating multiple tests each with multiple nested <iframe>s. The
+// variables in the array below seed various scenarios, described by "desc". The capital letters
+// describe the <iframe>s in play. When the same letter is used at different nesting levels that
+// means it is same-origin. Some defaulting is used to avoid too much duplication.
 ;[
   {
     outerPolicy: true,
@@ -60,20 +60,19 @@ async_test(t => {
     innerEmbed: remoteEmbed,
     desc: "A -> A uses no-referrer -> C",
     results: ["null", "null"],
-    innerResults: [localOrigin]
+    intermediateResults: [localOrigin]
   },
   {
     innerPolicy: true,
     outerEmbed: localEmbed,
     desc: "A -> A uses no-referrer -> A",
     results: ["null", "null"],
-    innerResults: [localOrigin]
+    intermediateResults: [localOrigin]
   }
-
 ].forEach(val => {
   async_test(t => {
-    if(!val.innerResults) {
-      val.innerResults = [val.results[1]]
+    if(!val.intermediateResults) {
+      val.intermediateResults = [val.results[1]]
     }
     if(!val.outerEmbed) {
       val.outerEmbed = remoteEmbed
@@ -106,7 +105,7 @@ async_test(t => {
 
     self.addEventListener("message", t.step_func(e => {
       if(e.data.id === innerId) {
-        assert_array_equals(e.data.output, val.innerResults)
+        assert_array_equals(e.data.output, val.intermediateResults)
         localDone()
       }
       else if(e.data.id === innermostId) {
@@ -166,4 +165,3 @@ async_test(t => {
     }
   }))
 }, "rel=noreferrer should redact")
-</script>
