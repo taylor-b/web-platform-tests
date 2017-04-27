@@ -771,7 +771,7 @@ def get_parser():
                         action="store",
                         type=str,
                         help="Location of ini-formatted configuration file",
-                        default="check_stability.ini")
+                        default=os.path.join(os.path.dirname(__file__), "check_stability.ini"))
     parser.add_argument("product",
                         action="store",
                         help="Product to run against (`browser-name` or 'browser-name:channel')")
